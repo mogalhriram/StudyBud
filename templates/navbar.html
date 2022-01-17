@@ -1,4 +1,14 @@
 <h1>Nav-Bar</h1>
+
 <form action="{% url 'home'%}" >
     <input type="text" name="q" placeholder="Search Rooms...">
-</for>
+</form>
+
+<div>
+    {% if request.user.is_authenticated %}
+    <a href="{% url 'logout' %}">Log-out</a>
+    {% else %}
+    <a href="{% url 'login' %}">Login</a>
+    {% endif %}
+
+</div>

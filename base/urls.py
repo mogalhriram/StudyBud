@@ -10,4 +10,5 @@ urlpatterns =[
     path('delete-room/<str:pk>', views.delete_room, name='delete-room'),
 
     path('login/', views.loginPage, name='login'),
+    path('logout/', views.logoutPage, name='logout'),
 ]
