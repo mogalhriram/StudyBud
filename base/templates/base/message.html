@@ -1,0 +1,9 @@
+{% extends 'main.html'%}
+{% block content %}
+<h3>Message Page</h3>
+<form action="" method="POST">
+    {% csrf_token %}
+    {{form.body}}
+    <input type="submit" value="submit">
+</form>
+{% endblock %}

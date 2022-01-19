@@ -1,24 +1,50 @@
+import re
 from django.http import HttpResponse
 from os import name
-from .models import Room, Topic
+from .models import Room, Topic, Message
 from django.shortcuts import render, redirect
-from .forms import RoomForm, UserForm
+from .forms import RoomForm, UserForm, MessageForm
 from django.db.models import Q
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import UserCreationForm
+
+@login_required
+def deleteMessage(request, pk):
+    message = Message.objects.get(id=pk)
+    if request.method == 'POST':
+        message.delete()
+        return redirect('room', message.room.id)
+    return render(request, 'base/delete_form.html')
+    
+
+@login_required(login_url='login')
+def editMessage(request, pk):
+    message = Message.objects.get(id=pk)
+    form = MessageForm(instance=message)
+    if request.method == "POST":
+        form = MessageForm(request.POST,instance=message)
+        if form.is_valid:
+            form.save()
+            return redirect('room', message.room.id)
+    context = {"form": form}
+    return render(request, 'base/message.html', context)
 
 def registerUser(request):
     if request.method == "POST":
-        form = UserForm(request.POST)
+        #form = UserForm(request.POST)
+        form = UserCreationForm(request.POST)
         if form.is_valid:
-            form.save()
-            user = User.objects.get(username = request.POST.get('username'))
-            print(user)
+            # form.save()
+            # user = User.objects.get(username = request.POST.get('username'))
+            # print(user)
+            user = form.save(commit=False)
             login(request, user)
             return redirect('home')
-    form = UserForm()
+    #form = UserForm()
+    form = UserCreationForm()
     action = "register"
     context = {"action": action, "form": form}
     return render(request, 'base/login_register.html', context)
@@ -69,7 +95,26 @@ def home(request,):
 
 def room(request, pk):
     room = Room.objects.get(id=pk)
-    context = {"room": room}
+    messages = room.message_set.all()
+    participant = []
+    for message in messages:
+        if message.user not in participant:
+            participant.append(message.user)
+        
+
+    print(participant)
+
+    #participants = messages.
+    if request.method == 'POST':
+        form = MessageForm(request.POST)
+        if form.is_valid:
+            message = form.save(commit=False)
+            message.user = request.user
+            message.room = room
+            message.save()
+            return redirect('room', room.id)
+    form = MessageForm()
+    context = {"room": room, "comments":messages, "form" : form, "participants": participant}
     return render(request, "base/room.html", context= context)
 
 @login_required
